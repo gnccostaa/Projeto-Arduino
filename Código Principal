@@ -72,7 +72,7 @@ void loop() {
   dtostrf(distancia, 6, 2, msg);
   client.publish(mqtt_topic, msg);
 
-   // Controle de LEDs com base nas medidas reais
+    // Controle de LEDs com base nas medidas reais
   if (distancia < 2.9) {
     // Muito cheio
     digitalWrite(LED_VERDE, HIGH);
@@ -96,4 +96,3 @@ void loop() {
     digitalWrite(RELE_PIN, HIGH);
   }
 
-}
