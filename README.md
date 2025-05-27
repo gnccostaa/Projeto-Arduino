@@ -1,0 +1,99 @@
+#include <ESP8266WiFi.h>
+#include <PubSubClient.h>
+
+// Wi-Fi
+const char* ssid = "Lar2.4";
+const char* password = "katiaflavia";
+
+// MQTT
+const char* mqtt_server = "test.mosquitto.org";
+const char* mqtt_topic = "sensor/distancia";
+
+// Pinos
+#define TRIG_PIN D5
+#define ECHO_PIN D6
+#define LED_VERDE D2
+#define LED_AMARELO D3
+#define LED_VERMELHO D4
+#define BUZZER_PIN D7
+#define RELE_PIN D1
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+void setup_wifi() {
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) delay(500);
+}
+
+void reconnect() {
+  while (!client.connected()) client.connect("NodeMCUClient");
+}
+
+void setup() {
+  Serial.begin(115200);
+  setup_wifi();
+  client.setServer(mqtt_server, 1883);
+
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+  pinMode(LED_VERDE, OUTPUT);
+  pinMode(LED_AMARELO, OUTPUT);
+  pinMode(LED_VERMELHO, OUTPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
+  pinMode(RELE_PIN, OUTPUT);
+
+  digitalWrite(LED_VERDE, HIGH);
+  digitalWrite(LED_AMARELO, HIGH);
+  digitalWrite(LED_VERMELHO, HIGH);
+  digitalWrite(BUZZER_PIN, LOW);
+  digitalWrite(RELE_PIN, LOW);
+}
+
+void loop() {
+  if (!client.connected()) reconnect();
+  client.loop();
+
+  // Medir distância
+  digitalWrite(TRIG_PIN, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+
+  long duracao = pulseIn(ECHO_PIN, HIGH);
+  float distancia = duracao * 0.034 / 2;
+
+  Serial.print("Distância: ");
+  Serial.print(distancia);
+  Serial.println(" cm");
+
+  char msg[50];
+  dtostrf(distancia, 6, 2, msg);
+  client.publish(mqtt_topic, msg);
+
+   // Controle de LEDs com base nas medidas reais
+  if (distancia < 2.9) {
+    // Muito cheio
+    digitalWrite(LED_VERDE, HIGH);
+    digitalWrite(LED_AMARELO, LOW);
+    digitalWrite(LED_VERMELHO, HIGH);
+    digitalWrite(BUZZER_PIN, HIGH);
+    digitalWrite(RELE_PIN, LOW);
+  } else if (distancia >= 3.0 && distancia <= 4.0) {
+    // Nível ideal
+    digitalWrite(LED_VERDE, LOW);
+    digitalWrite(LED_AMARELO, HIGH);
+    digitalWrite(LED_VERMELHO, HIGH);
+    digitalWrite(BUZZER_PIN, LOW);
+    digitalWrite(RELE_PIN, LOW);
+  } else {
+    // Nível baixo
+    digitalWrite(LED_VERDE, HIGH);
+    digitalWrite(LED_AMARELO, HIGH);
+    digitalWrite(LED_VERMELHO, LOW);
+    digitalWrite(BUZZER_PIN, HIGH);
+    digitalWrite(RELE_PIN, HIGH);
+  }
+
+}
