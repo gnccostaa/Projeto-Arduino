@@ -1,0 +1,27 @@
+iii) Descrição do Hardware Utilizado
+O sistema proposto foi desenvolvido utilizando os seguintes componentes de hardware:
+
+• Plataforma de Desenvolvimento
+ESP8266 NodeMCU: Microcontrolador com conectividade Wi-Fi integrada, utilizado para leitura dos sensores, controle dos atuadores e envio dos dados via protocolo MQTT para uma plataforma externa. Alimentado via USB ou fonte 5V externa.
+
+• Sensores
+Sensor Ultrassônico HC-SR04: Utilizado para medir a distância até um objeto (nível de um reservatório, por exemplo). Alimentado com 5V (via fonte externa) e conectado ao ESP8266 por meio dos pinos TRIG e ECHO.
+
+Tensão de operação: 5V
+
+Distância de medição: 2 cm a 5 cm
+
+Precisão: ±3 mm
+
+• Atuadores
+LEDs (vermelho, amarelo e verde): Indicadores visuais de nível com base na distância medida. Conectados aos pinos D2, D3 e D4 do NodeMCU.
+
+Buzzer Passivo: Emissor sonoro ativado em níveis críticos, conectado ao pino D7.
+
+Módulo Relé 1 canal 5V: Utilizado para acionar uma carga externa (como uma bomba d'água ou alarme), conectado ao pino D1 do NodeMCU. Alimentado por fonte externa de 5V (VCC e GND comuns com o ESP8266).
+
+• Fonte de Alimentação
+Fonte externa de 5V (por exemplo, carregador USB ou fonte de bancada): Utilizada para alimentar o sensor ultrassônico e o módulo relé, evitando sobrecarga na alimentação do NodeMCU.
+
+• Protoboard e Cabos Jumpers
+Utilizados para fazer as conexões entre os componentes e para distribuir a alimentação de 5V e GND entre os sensores, atuadores e o NodeMCU.
