@@ -1,98 +1,153 @@
-#include <ESP8266WiFi.h>
+#include <WiFi.h>
 #include <PubSubClient.h>
 
-// Wi-Fi
-const char* ssid = "Lar2.4";
-const char* password = "katiaflavia";
+// ==========================
+// Configurações Wi-Fi
+// ==========================
+const char* ssid     = "Wokwi-GUEST";
+const char* password = "";
 
-// MQTT
-const char* mqtt_server = "test.mosquitto.org";
-const char* mqtt_topic = "sensor/distancia";
-
-// Pinos
-#define TRIG_PIN D5
-#define ECHO_PIN D6
-#define LED_VERDE D2
-#define LED_AMARELO D3
-#define LED_VERMELHO D4
-#define BUZZER_PIN D7
-#define RELE_PIN D1
+// ==========================
+// Configurações MQTT (broker TCP HiveMQ)
+// ==========================
+const char* mqtt_server = "broker.hivemq.com";
+const char* mqtt_topic_pub     = "reservatorio/nivel";
+const char* mqtt_topic_alerta  = "reservatorio/alerta";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-void setup_wifi() {
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) delay(500);
-}
+// ==========================
+// Pinos do sensor e atuadores00
+// ==========================
+#define TRIG_PIN    5
+#define ECHO_PIN   18
+#define BUZZER_PIN 21
+#define LED_CHEIO  13
+#define LED_MEDIO  12
+#define LED_VAZIO  14
 
-void reconnect() {
-  while (!client.connected()) client.connect("NodeMCUClient");
-}
+long duration;
+int  distance;
+bool alertaEnviado = false;
 
 void setup() {
   Serial.begin(115200);
-  setup_wifi();
-  client.setServer(mqtt_server, 1883);
 
+  // configura pinos
   pinMode(TRIG_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
-  pinMode(LED_VERDE, OUTPUT);
-  pinMode(LED_AMARELO, OUTPUT);
-  pinMode(LED_VERMELHO, OUTPUT);
   pinMode(BUZZER_PIN, OUTPUT);
-  pinMode(RELE_PIN, OUTPUT);
+  pinMode(LED_CHEIO, OUTPUT);
+  pinMode(LED_MEDIO, OUTPUT);
+  pinMode(LED_VAZIO, OUTPUT);
 
-  digitalWrite(LED_VERDE, HIGH);
-  digitalWrite(LED_AMARELO, HIGH);
-  digitalWrite(LED_VERMELHO, HIGH);
   digitalWrite(BUZZER_PIN, LOW);
-  digitalWrite(RELE_PIN, LOW);
+
+  // conecta Wi-Fi
+  WiFi.begin(ssid, password);
+  Serial.print("Conectando WiFi");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(300);
+    Serial.print(".");
+  }
+  Serial.println(" conectado!");
+  Serial.print("IP: ");
+  Serial.println(WiFi.localIP());
+
+  // configura MQTT
+  client.setServer(mqtt_server, 1883);
+}
+
+void reconnectMQTT() {
+  while (!client.connected()) {
+    Serial.print("Tentando MQTT...");
+    if (client.connect("ESP32Reservatorio")) {
+      Serial.println("OK");
+    } else {
+      Serial.print("falhou, rc=");
+      Serial.print(client.state());
+      Serial.println(" tentando em 3s");
+      delay(3000);
+    }
+  }
 }
 
 void loop() {
-  if (!client.connected()) reconnect();
+  if (!client.connected()) {
+    reconnectMQTT();
+  }
   client.loop();
 
-  // Medir distância
+  // dispara ultrassom
   digitalWrite(TRIG_PIN, LOW);
   delayMicroseconds(2);
   digitalWrite(TRIG_PIN, HIGH);
   delayMicroseconds(10);
   digitalWrite(TRIG_PIN, LOW);
 
-  long duracao = pulseIn(ECHO_PIN, HIGH);
-  float distancia = duracao * 0.034 / 2;
+  // mede pulso (timeout 30 ms)
+  duration = pulseIn(ECHO_PIN, HIGH, 30000);
 
-  Serial.print("Distância: ");
-  Serial.print(distancia);
-  Serial.println(" cm");
+  if (duration == 0) {
+    distance = -1;
+    Serial.println("Sem leitura");
 
-  char msg[50];
-  dtostrf(distancia, 6, 2, msg);
-  client.publish(mqtt_topic, msg);
-
-    // Controle de LEDs com base nas medidas reais
-  if (distancia < 2.9) {
-    // Muito cheio
-    digitalWrite(LED_VERDE, HIGH);
-    digitalWrite(LED_AMARELO, LOW);
-    digitalWrite(LED_VERMELHO, HIGH);
-    digitalWrite(BUZZER_PIN, HIGH);
-    digitalWrite(RELE_PIN, LOW);
-  } else if (distancia >= 3.0 && distancia <= 4.0) {
-    // Nível ideal
-    digitalWrite(LED_VERDE, LOW);
-    digitalWrite(LED_AMARELO, HIGH);
-    digitalWrite(LED_VERMELHO, HIGH);
+    // Apaga todos os LEDs e buzzer se não houve leitura válida
+    digitalWrite(LED_CHEIO, LOW);
+    digitalWrite(LED_MEDIO, LOW);
+    digitalWrite(LED_VAZIO, LOW);
     digitalWrite(BUZZER_PIN, LOW);
-    digitalWrite(RELE_PIN, LOW);
+
+    if (alertaEnviado) {
+      client.publish(mqtt_topic_alerta, "");  // limpa alerta
+      alertaEnviado = false;
+    }
+
   } else {
-    // Nível baixo
-    digitalWrite(LED_VERDE, HIGH);
-    digitalWrite(LED_AMARELO, HIGH);
-    digitalWrite(LED_VERMELHO, LOW);
-    digitalWrite(BUZZER_PIN, HIGH);
-    digitalWrite(RELE_PIN, HIGH);
+    distance = duration * 0.034 / 2;
+    Serial.print("Distância: ");
+    Serial.print(distance);
+    Serial.println(" cm");
+
+    // publica no tópico de nível
+    char buf[8];
+    snprintf(buf, sizeof(buf), "%d", distance);
+    client.publish(mqtt_topic_pub, buf);
+
+    // lógica de LEDs e buzzer
+    if (distance >= 0 && distance <= 9) {  // VERDE
+      digitalWrite(LED_CHEIO, HIGH);
+      digitalWrite(LED_MEDIO, LOW);
+      digitalWrite(LED_VAZIO, LOW);
+      digitalWrite(BUZZER_PIN, LOW);
+      if (alertaEnviado) {
+        client.publish(mqtt_topic_alerta, "");
+        alertaEnviado = false;
+      }
+    } 
+    else if (distance >= 10 && distance <= 19) {  // AMARELO
+      digitalWrite(LED_CHEIO, LOW);
+      digitalWrite(LED_MEDIO, HIGH);
+      digitalWrite(LED_VAZIO, LOW);
+      digitalWrite(BUZZER_PIN, LOW);
+      if (alertaEnviado) {
+        client.publish(mqtt_topic_alerta, "");
+        alertaEnviado = false;
+      }
+    } 
+    else if (distance >= 20) {  // VERMELHO
+      digitalWrite(LED_CHEIO, LOW);
+      digitalWrite(LED_MEDIO, LOW);
+      digitalWrite(LED_VAZIO, HIGH);
+      digitalWrite(BUZZER_PIN, HIGH);
+
+      if (!alertaEnviado) {
+        client.publish(mqtt_topic_alerta, "ALERTA: nível baixo!");
+        alertaEnviado = true;
+      }
+    }
   }
 
+delay(500);
+}
