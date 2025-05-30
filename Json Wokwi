@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "author": "Eduarda Julia Duda",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-breadboard-half", "id": "bb1", "top": 54.6, "left": -45.2, "attrs": {} },
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 28.8, "left": -177.56, "attrs": {} },
+    {
+      "type": "wokwi-hc-sr04",
+      "id": "ultrasonic1",
+      "top": 366.3,
+      "left": 130.3,
+      "attrs": { "distance": "17" }
+    },
+    { "type": "wokwi-relay-module", "id": "relay1", "top": -38.2, "left": 28.8, "attrs": {} },
+    {
+      "type": "wokwi-buzzer",
+      "id": "bz1",
+      "top": 271.2,
+      "left": -151.8,
+      "attrs": { "volume": "0.1" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led1",
+      "top": 207.6,
+      "left": 128.6,
+      "attrs": { "color": "red" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led2",
+      "top": 207.6,
+      "left": 243.8,
+      "attrs": { "color": "green" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led3",
+      "top": 207.6,
+      "left": 186.2,
+      "attrs": { "color": "yellow", "flip": "" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r1",
+      "top": 168,
+      "left": 114.65,
+      "rotate": 90,
+      "attrs": { "value": "200" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r2",
+      "top": 168,
+      "left": 172.25,
+      "rotate": 90,
+      "attrs": { "value": "200" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r4",
+      "top": 168,
+      "left": 229.85,
+      "rotate": 90,
+      "attrs": { "value": "200" }
+    }
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+    [ "bb1:bp.1", "esp:5V", "green", [ "v-0.9", "h-161.6" ] ],
+    [ "esp:GND.2", "bb1:bn.1", "black", [ "v0", "h28.8", "v192" ] ],
+    [ "ultrasonic1:VCC", "bb1:bp.10", "red", [ "v-134.4", "h-9.6" ] ],
+    [ "ultrasonic1:GND", "bb1:bn.13", "black", [ "v0" ] ],
+    [ "ultrasonic1:TRIG", "esp:5", "green", [ "v9.6", "h-163.6", "v-240" ] ],
+    [ "ultrasonic1:ECHO", "esp:18", "green", [ "v28.8", "h-173.6", "v-268.8" ] ],
+    [ "relay1:VCC", "bb1:bp.2", "red", [ "h-38.4" ] ],
+    [ "relay1:GND", "bb1:bn.4", "black", [ "h0" ] ],
+    [ "relay1:IN", "esp:19", "green", [ "h-96", "v124.6" ] ],
+    [ "bz1:1", "bb1:bn.2", "green", [ "v9.6", "h134.4" ] ],
+    [ "bz1:2", "bb1:bp.3", "green", [ "v0", "h134" ] ],
+    [ "bb1:17t.d", "esp:14", "green", [ "v0" ] ],
+    [ "bb1:23t.d", "esp:12", "green", [ "v0" ] ],
+    [ "bb1:30t.d", "esp:13", "green", [ "v0" ] ],
+    [ "r4:1", "bb1:30t.e", "", [ "$bb" ] ],
+    [ "r4:2", "bb1:30b.i", "", [ "$bb" ] ],
+    [ "led2:C", "bb1:bn.25", "", [ "$bb" ] ],
+    [ "led2:A", "bb1:30b.j", "green", [ "v0" ] ],
+    [ "led3:C", "bb1:bn.20", "", [ "$bb" ] ],
+    [ "led3:A", "bb1:24b.j", "green", [ "v0" ] ],
+    [ "r2:1", "bb1:24t.e", "", [ "$bb" ] ],
+    [ "r2:2", "bb1:24b.i", "", [ "$bb" ] ],
+    [ "bb1:24t.d", "bb1:23t.d", "green", [ "v0" ] ],
+    [ "led1:C", "bb1:bn.15", "", [ "$bb" ] ],
+    [ "r1:1", "bb1:18t.e", "", [ "$bb" ] ],
+    [ "r1:2", "bb1:18b.i", "", [ "$bb" ] ],
+    [ "bb1:18t.d", "bb1:17t.d", "green", [ "v0" ] ],
+    [ "led1:A", "bb1:18b.j", "green", [ "v0" ] ]
+  ],
+  "dependencies": {}
+}
