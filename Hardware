@@ -1,27 +1,40 @@
 iii) Descrição do Hardware Utilizado
-O sistema proposto foi desenvolvido utilizando os seguintes componentes de hardware:
+O sistema de monitoramento de nível de reservatório foi desenvolvido utilizando os seguintes componentes de hardware:
 
 • Plataforma de Desenvolvimento
-ESP8266 NodeMCU: Microcontrolador com conectividade Wi-Fi integrada, utilizado para leitura dos sensores, controle dos atuadores e envio dos dados via protocolo MQTT para uma plataforma externa. Alimentado via USB ou fonte 5V externa.
+ESP32 (DevKit V1)
+Microcontrolador com conectividade Wi-Fi integrada, responsável pela leitura do sensor ultrassônico, controle dos LEDs e buzzer, e envio de dados via protocolo MQTT para um broker público (HiveMQ). Alimentado via cabo USB.
 
-• Sensores
-Sensor Ultrassônico HC-SR04: Utilizado para medir a distância até um objeto (nível de um reservatório, por exemplo). Alimentado com 5V (via fonte externa) e conectado ao ESP8266 por meio dos pinos TRIG e ECHO.
+• Sensor
+Sensor Ultrassônico HC-SR04
+Responsável pela medição da distância entre o sensor e a superfície da água, permitindo calcular o nível do reservatório.
 
+Pinos utilizados:
+TRIG → GPIO 5
+ECHO → GPIO 18
 Tensão de operação: 5V
-
-Distância de medição: 2 cm a 5 cm
-
+Faixa de medição: 2 cm a 400 cm
 Precisão: ±3 mm
 
+Observação: A leitura é feita a cada 500 ms para atualização contínua do nível.
+
 • Atuadores
-LEDs (vermelho, amarelo e verde): Indicadores visuais de nível com base na distância medida. Conectados aos pinos D2, D3 e D4 do NodeMCU.
+LEDs de Nível (indicadores visuais)
+Três LEDs indicam visualmente o nível do reservatório com base na distância medida:
+LED VERDE (nível cheio) → GPIO 13
+LED AMARELO (nível médio) → GPIO 12
+LED VERMELHO (nível baixo) → GPIO 14
+Buzzer Passivo (indicador sonoro)
+Ativado automaticamente quando o nível de água atinge o valor crítico (distância ≥ 20 cm).
+Pino utilizado: GPIO 21
 
-Buzzer Passivo: Emissor sonoro ativado em níveis críticos, conectado ao pino D7.
-
-Módulo Relé 1 canal 5V: Utilizado para acionar uma carga externa (como uma bomba d'água ou alarme), conectado ao pino D1 do NodeMCU. Alimentado por fonte externa de 5V (VCC e GND comuns com o ESP8266).
+• Conectividade MQTT
+O ESP32 se comunica com o broker MQTT público da HiveMQ utilizando a biblioteca PubSubClient, publicando:
+A distância medida no tópico reservatorio/nivel
+Alertas sonoros e visuais no tópico reservatorio/alerta
 
 • Fonte de Alimentação
-Fonte externa de 5V (por exemplo, carregador USB ou fonte de bancada): Utilizada para alimentar o sensor ultrassônico e o módulo relé, evitando sobrecarga na alimentação do NodeMCU.
+O ESP32 é alimentado diretamente por USB (5V), que também fornece energia para os LEDs e buzzer. O sensor ultrassônico é alimentado por 5V diretamente do ESP32.
 
-• Protoboard e Cabos Jumpers
-Utilizados para fazer as conexões entre os componentes e para distribuir a alimentação de 5V e GND entre os sensores, atuadores e o NodeMCU.
+• Protoboard e Jumpers
+Utilizados para montar os circuitos de forma modular, possibilitando a conexão entre os pinos digitais do ESP32, os LEDs, o buzzer e o sensor HC-SR04, além da distribuição da alimentação.
