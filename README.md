@@ -1,2 +1,1 @@
-IoT e Sistema de Monitoramento de Nível de Água para Reservatórios
-Projeto que visa criar um sistema de monitoramento usando arduíno, a fim de evitar o desperdício e escassez de água.
+O acesso à água potável e o uso sustentável dos recursos hídricos são fundamentais para o desenvolvimento sustentável, conforme definido pelo ODS 6 (Água Potável e Saneamento). Este projeto propõe um sistema IoT para monitoramento do nível de água em reservatórios domésticos e industriais, utilizando sensores de nível e conectividade Wi-Fi. A implementação desse sistema permite evitar desperdícios, prevenir falta de água e auxiliar na gestão eficiente do recurso, especialmente em cidades como São Paulo, que enfrentam períodos alternados de chuvas intensas e estiagem prolongada.
